@@ -1,5 +1,7 @@
 .build/
 .terraform/
+infra/.build/
+infra/terraform/.build/
 *.tfstate
 *.tfstate.*
 *.tfvars

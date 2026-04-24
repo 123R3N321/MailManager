@@ -1,0 +1,17 @@
+.build/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!examples/demo.tfvars
+!**/examples/demo.tfvars
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+*.zip
+.DS_Store

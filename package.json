@@ -1,0 +1,16 @@
+{
+  "name": "gmail-ai-reply",
+  "version": "1.0.0",
+  "description": "Chrome extension: AI-powered Gmail reply generator",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/.bin/jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {}
+  }
+}

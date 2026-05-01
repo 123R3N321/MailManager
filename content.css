@@ -1,0 +1,121 @@
+.ai-reply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 8px 16px;
+  padding: 8px 14px;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: "Google Sans", Roboto, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s;
+  z-index: 1000;
+}
+
+.ai-reply-btn:hover:not(:disabled) {
+  background: #1558b0;
+}
+
+.ai-reply-btn:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+/* Modal overlay */
+.ai-reply-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-reply-box {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  width: min(560px, 90vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: "Google Sans", Roboto, sans-serif;
+}
+
+.ai-reply-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 15px;
+}
+
+.ai-reply-model {
+  font-size: 11px;
+  color: #666;
+  background: #f1f3f4;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.ai-reply-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #666;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.ai-reply-close:hover {
+  background: #f1f3f4;
+}
+
+.ai-reply-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.ai-reply-textarea {
+  width: 100%;
+  resize: vertical;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  padding: 10px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.ai-reply-copy-btn {
+  align-self: flex-end;
+  padding: 8px 16px;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ai-reply-copy-btn:hover {
+  background: #1558b0;
+}
+
+.ai-reply-error {
+  color: #c5221f;
+  font-size: 14px;
+  margin: 0;
+}

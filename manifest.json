@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "AI Email Reply",
+  "version": "1.0.0",
+  "description": "Read Gmail emails and generate AI-powered replies. Supports Claude, OpenAI, and a built-in dummy provider for testing.",
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://mail.google.com/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI Email Reply"
+  },
+
+  "options_page": "options.html",
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://api.anthropic.com https://api.openai.com"
+  }
+}

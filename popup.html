@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Email Reply</title>
+  <style>
+    body {
+      width: 220px;
+      padding: 14px 16px;
+      font-family: "Google Sans", Roboto, sans-serif;
+      font-size: 13px;
+      color: #202124;
+      margin: 0;
+    }
+    h3 { margin: 0 0 10px; font-size: 15px; }
+    .row { display: flex; justify-content: space-between; margin: 6px 0; }
+    .label { color: #666; }
+    .badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-ok { background: #e6f4ea; color: #137333; }
+    .badge-warn { background: #fce8e6; color: #c5221f; }
+    a.settings-link {
+      display: block;
+      margin-top: 12px;
+      color: #1a73e8;
+      text-decoration: none;
+      font-size: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h3>AI Email Reply</h3>
+  <div class="row">
+    <span class="label">Provider</span>
+    <span id="provider-name">…</span>
+  </div>
+  <div class="row">
+    <span class="label">Status</span>
+    <span id="status-badge" class="badge">…</span>
+  </div>
+  <a class="settings-link" id="options-link" href="#">Open Settings →</a>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

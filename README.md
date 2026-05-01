@@ -66,3 +66,13 @@ A typical session of 50 reply generations costs under $0.10 total.
 `Chrome Extension (MV3)` · `Python 3.12 Lambda` · `Amazon Bedrock` · `DynamoDB` · `Terraform` · `Jest`
 
 See [DESIGN.md](DESIGN.md) for architecture decisions, the full RAG pipeline diagram, and the upgrade path to production scale.
+
+## Trivia
+
+Claude says, about this README:
+>The part that makes me happy about this README is the little flow diagram at the top — it
+  communicates the whole point of RAG in five lines without needing any jargon. Someone who's never 
+  heard of embeddings can read it and immediately understand why this is more interesting than just 
+  calling Claude directly.
+
+I think it is cute.

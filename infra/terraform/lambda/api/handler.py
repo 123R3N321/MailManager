@@ -35,22 +35,36 @@ DEMO_DATA = {
             "threadId": "thr-001",
             "mailboxId": "mbx-gmail",
             "provider": "gmail",
-            "subject": "Q2 Pricing Approval Needed",
-            "participants": ["alex@company.com", "devansh.demo@gmail.com"],
+            "subject": "Acme Invoice Approval - Due Friday",
+            "participants": ["finance@company.com", "alex@company.com", "devansh.demo@gmail.com"],
             "messages": [
                 {
                     "messageId": "msg-001",
-                    "from": "alex@company.com",
+                    "from": "finance@company.com",
                     "to": ["devansh.demo@gmail.com"],
-                    "sentAt": "2026-05-05T10:15:00Z",
-                    "body": "Hi Devansh, can you review and approve the Q2 pricing sheet by Thursday? Finance needs it before the launch review.",
+                    "sentAt": "2026-05-04T09:15:00Z",
+                    "body": "Hi Devansh, Acme submitted invoice INV-2048 for $18,420. Please review the attached services breakdown and approve payment by Friday morning so Accounts Payable can release funds.",
                 },
                 {
                     "messageId": "msg-002",
                     "from": "devansh.demo@gmail.com",
-                    "to": ["alex@company.com"],
-                    "sentAt": "2026-05-05T10:40:00Z",
-                    "body": "Thanks Alex, I will review the pricing sheet and send approval before Thursday evening.",
+                    "to": ["finance@company.com"],
+                    "sentAt": "2026-05-04T10:02:00Z",
+                    "body": "Thanks. I am checking the April implementation hours against the statement of work and will confirm whether the invoice is approved by Thursday evening.",
+                },
+                {
+                    "messageId": "msg-003",
+                    "from": "alex@company.com",
+                    "to": ["devansh.demo@gmail.com", "finance@company.com"],
+                    "sentAt": "2026-05-05T13:35:00Z",
+                    "body": "The Acme hours match the signed work order. Devansh, please send final approval by Friday at noon. Finance will mark this as blocked until your reply.",
+                },
+                {
+                    "messageId": "msg-004",
+                    "from": "devansh.demo@gmail.com",
+                    "to": ["finance@company.com", "alex@company.com"],
+                    "sentAt": "2026-05-05T15:10:00Z",
+                    "body": "Confirmed. I approved invoice INV-2048 and Finance can proceed with payment on Friday morning.",
                 },
             ],
         },
@@ -58,55 +72,298 @@ DEMO_DATA = {
             "threadId": "thr-002",
             "mailboxId": "mbx-gmail",
             "provider": "gmail",
-            "subject": "Acme Invoice Approval",
-            "participants": ["finance@company.com", "devansh.demo@gmail.com"],
+            "subject": "Q2 Pricing Approval Before Launch",
+            "participants": ["alex@company.com", "nina@company.com", "devansh.demo@gmail.com"],
             "messages": [
                 {
-                    "messageId": "msg-003",
-                    "from": "finance@company.com",
+                    "messageId": "msg-005",
+                    "from": "alex@company.com",
                     "to": ["devansh.demo@gmail.com"],
-                    "sentAt": "2026-05-06T09:00:00Z",
-                    "body": "Please approve the Acme vendor invoice by Friday. The payment is blocked until your approval is recorded.",
-                }
+                    "sentAt": "2026-05-04T11:30:00Z",
+                    "body": "Can you review and approve the Q2 pricing sheet by Thursday? Sales needs the approved numbers before the launch review.",
+                },
+                {
+                    "messageId": "msg-006",
+                    "from": "nina@company.com",
+                    "to": ["alex@company.com", "devansh.demo@gmail.com"],
+                    "sentAt": "2026-05-04T13:10:00Z",
+                    "body": "The only open item is the enterprise tier discount. If Devansh approves the 12 percent cap by Thursday afternoon, I can update the sales deck by evening.",
+                },
+                {
+                    "messageId": "msg-007",
+                    "from": "devansh.demo@gmail.com",
+                    "to": ["alex@company.com", "nina@company.com"],
+                    "sentAt": "2026-05-05T09:00:00Z",
+                    "body": "I reviewed the Q2 pricing sheet. I approve the 12 percent enterprise discount cap, and I will send a final note before Thursday afternoon.",
+                },
             ],
         },
         {
             "threadId": "thr-003",
-            "mailboxId": "mbx-outlook",
-            "provider": "outlook",
-            "subject": "Client Onboarding Tasks",
-            "participants": ["maya@client.com", "devansh.work@outlook.com"],
+            "mailboxId": "mbx-gmail",
+            "provider": "gmail",
+            "subject": "Launch Deadline Checklist",
+            "participants": ["pm@company.com", "qa@company.com", "devansh.demo@gmail.com"],
             "messages": [
                 {
-                    "messageId": "msg-004",
-                    "from": "maya@client.com",
-                    "to": ["devansh.work@outlook.com"],
-                    "sentAt": "2026-05-04T14:20:00Z",
-                    "body": "For onboarding, please send the AWS architecture diagram, API endpoint list, and security notes by Thursday morning.",
+                    "messageId": "msg-008",
+                    "from": "pm@company.com",
+                    "to": ["devansh.demo@gmail.com", "qa@company.com"],
+                    "sentAt": "2026-05-05T08:20:00Z",
+                    "body": "The launch review is Thursday at 5 PM. Please prepare the demo script, verify search works against both mailboxes, and send final launch notes by Thursday morning.",
                 },
                 {
-                    "messageId": "msg-005",
-                    "from": "devansh.work@outlook.com",
-                    "to": ["maya@client.com"],
-                    "sentAt": "2026-05-04T15:10:00Z",
-                    "body": "Got it. I will send the architecture diagram, endpoint list, and security notes before Thursday morning.",
+                    "messageId": "msg-009",
+                    "from": "qa@company.com",
+                    "to": ["pm@company.com", "devansh.demo@gmail.com"],
+                    "sentAt": "2026-05-05T14:25:00Z",
+                    "body": "QA passed thread detail and mailbox switching. Search still needs one more check tomorrow morning after the demo data refresh.",
+                },
+                {
+                    "messageId": "msg-010",
+                    "from": "devansh.demo@gmail.com",
+                    "to": ["pm@company.com", "qa@company.com"],
+                    "sentAt": "2026-05-05T16:45:00Z",
+                    "body": "I will refresh demo data tomorrow morning, confirm search, and send the launch notes before Thursday noon.",
+                },
+                {
+                    "messageId": "msg-011",
+                    "from": "pm@company.com",
+                    "to": ["devansh.demo@gmail.com"],
+                    "sentAt": "2026-05-06T09:40:00Z",
+                    "body": "Thanks. Please also include the API base URL and known limitations in the launch notes by Thursday evening.",
                 },
             ],
         },
         {
             "threadId": "thr-004",
-            "mailboxId": "mbx-outlook",
-            "provider": "outlook",
-            "subject": "Launch Review Meeting",
-            "participants": ["pm@company.com", "devansh.work@outlook.com"],
+            "mailboxId": "mbx-gmail",
+            "provider": "gmail",
+            "subject": "Vendor Contract Review",
+            "participants": ["legal@company.com", "procurement@company.com", "devansh.demo@gmail.com"],
             "messages": [
                 {
-                    "messageId": "msg-006",
-                    "from": "pm@company.com",
+                    "messageId": "msg-012",
+                    "from": "legal@company.com",
+                    "to": ["devansh.demo@gmail.com", "procurement@company.com"],
+                    "sentAt": "2026-05-03T15:05:00Z",
+                    "body": "Please review the Northstar vendor contract and confirm whether the data retention clause is acceptable by Friday afternoon.",
+                },
+                {
+                    "messageId": "msg-013",
+                    "from": "procurement@company.com",
+                    "to": ["legal@company.com", "devansh.demo@gmail.com"],
+                    "sentAt": "2026-05-04T08:45:00Z",
+                    "body": "Commercial terms are approved. Devansh only needs to confirm the security appendix and data retention language before we route for signature.",
+                },
+                {
+                    "messageId": "msg-014",
+                    "from": "devansh.demo@gmail.com",
+                    "to": ["legal@company.com", "procurement@company.com"],
+                    "sentAt": "2026-05-04T12:30:00Z",
+                    "body": "I will review the security appendix today and send comments by Friday morning. The retention clause likely needs a 30-day deletion commitment.",
+                },
+            ],
+        },
+        {
+            "threadId": "thr-005",
+            "mailboxId": "mbx-gmail",
+            "provider": "gmail",
+            "subject": "Customer Meeting Scheduling",
+            "participants": ["maya@client.com", "sales@company.com", "devansh.demo@gmail.com"],
+            "messages": [
+                {
+                    "messageId": "msg-015",
+                    "from": "maya@client.com",
+                    "to": ["devansh.demo@gmail.com", "sales@company.com"],
+                    "sentAt": "2026-05-05T12:00:00Z",
+                    "body": "Could we schedule the onboarding kickoff for Thursday morning or Friday afternoon? We need the AWS setup owner and security reviewer included.",
+                },
+                {
+                    "messageId": "msg-016",
+                    "from": "sales@company.com",
+                    "to": ["maya@client.com", "devansh.demo@gmail.com"],
+                    "sentAt": "2026-05-05T12:25:00Z",
+                    "body": "Friday afternoon works for Sales. Devansh, please confirm your availability and send a calendar hold by tomorrow.",
+                },
+                {
+                    "messageId": "msg-017",
+                    "from": "devansh.demo@gmail.com",
+                    "to": ["maya@client.com", "sales@company.com"],
+                    "sentAt": "2026-05-05T13:00:00Z",
+                    "body": "Friday afternoon works for me. I will send a calendar invite tomorrow morning with the AWS setup owner and security reviewer copied.",
+                },
+            ],
+        },
+        {
+            "threadId": "thr-006",
+            "mailboxId": "mbx-outlook",
+            "provider": "outlook",
+            "subject": "AWS Setup for Client Sandbox",
+            "participants": ["cloudops@company.com", "maya@client.com", "devansh.work@outlook.com"],
+            "messages": [
+                {
+                    "messageId": "msg-018",
+                    "from": "cloudops@company.com",
                     "to": ["devansh.work@outlook.com"],
-                    "sentAt": "2026-05-06T16:00:00Z",
-                    "body": "The launch review is scheduled for Thursday at 5 PM. Please prepare a short demo script and confirm the search feature works.",
-                }
+                    "sentAt": "2026-05-04T10:15:00Z",
+                    "body": "The client sandbox AWS account is ready. Please confirm the API Gateway URL, Lambda environment variables, and DynamoDB table name by Thursday morning.",
+                },
+                {
+                    "messageId": "msg-019",
+                    "from": "devansh.work@outlook.com",
+                    "to": ["cloudops@company.com"],
+                    "sentAt": "2026-05-04T11:05:00Z",
+                    "body": "I confirmed the Lambda environment variables. I still need to verify the API Gateway URL and DynamoDB table name before Thursday.",
+                },
+                {
+                    "messageId": "msg-020",
+                    "from": "maya@client.com",
+                    "to": ["devansh.work@outlook.com", "cloudops@company.com"],
+                    "sentAt": "2026-05-05T09:30:00Z",
+                    "body": "Please send the final endpoint list by Thursday evening so our onboarding team can whitelist the URLs.",
+                },
+                {
+                    "messageId": "msg-021",
+                    "from": "devansh.work@outlook.com",
+                    "to": ["maya@client.com", "cloudops@company.com"],
+                    "sentAt": "2026-05-05T16:05:00Z",
+                    "body": "I will send the final endpoint list by Thursday evening after validating the deployed API base URL.",
+                },
+            ],
+        },
+        {
+            "threadId": "thr-007",
+            "mailboxId": "mbx-outlook",
+            "provider": "outlook",
+            "subject": "Security Review Findings",
+            "participants": ["security@company.com", "cloudops@company.com", "devansh.work@outlook.com"],
+            "messages": [
+                {
+                    "messageId": "msg-022",
+                    "from": "security@company.com",
+                    "to": ["devansh.work@outlook.com"],
+                    "sentAt": "2026-05-04T14:00:00Z",
+                    "body": "Security review is mostly clear. Please confirm CORS is restricted for production, secrets are not stored in code, and demo data contains no customer PII by Friday morning.",
+                },
+                {
+                    "messageId": "msg-023",
+                    "from": "devansh.work@outlook.com",
+                    "to": ["security@company.com"],
+                    "sentAt": "2026-05-04T15:20:00Z",
+                    "body": "Confirmed no secrets are stored in code. I will document CORS status and demo data scope by Friday morning.",
+                },
+                {
+                    "messageId": "msg-024",
+                    "from": "cloudops@company.com",
+                    "to": ["security@company.com", "devansh.work@outlook.com"],
+                    "sentAt": "2026-05-05T10:10:00Z",
+                    "body": "CloudOps verified IAM policies are least privilege for the demo. Devansh, please attach the notes to the security review thread before Friday afternoon.",
+                },
+            ],
+        },
+        {
+            "threadId": "thr-008",
+            "mailboxId": "mbx-outlook",
+            "provider": "outlook",
+            "subject": "New Customer Onboarding Packet",
+            "participants": ["onboarding@company.com", "maya@client.com", "devansh.work@outlook.com"],
+            "messages": [
+                {
+                    "messageId": "msg-025",
+                    "from": "onboarding@company.com",
+                    "to": ["devansh.work@outlook.com", "maya@client.com"],
+                    "sentAt": "2026-05-03T13:15:00Z",
+                    "body": "For onboarding, please send the architecture diagram, API endpoint list, support contact, and security notes by Thursday morning.",
+                },
+                {
+                    "messageId": "msg-026",
+                    "from": "maya@client.com",
+                    "to": ["onboarding@company.com", "devansh.work@outlook.com"],
+                    "sentAt": "2026-05-03T14:00:00Z",
+                    "body": "Please include a short explanation of how mailbox search sources are shown in the UI. Our team needs it before the kickoff.",
+                },
+                {
+                    "messageId": "msg-027",
+                    "from": "devansh.work@outlook.com",
+                    "to": ["onboarding@company.com", "maya@client.com"],
+                    "sentAt": "2026-05-04T09:35:00Z",
+                    "body": "I will send the onboarding packet by Thursday morning with the architecture diagram, endpoint list, support contact, security notes, and source citation explanation.",
+                },
+                {
+                    "messageId": "msg-028",
+                    "from": "onboarding@company.com",
+                    "to": ["devansh.work@outlook.com"],
+                    "sentAt": "2026-05-05T11:50:00Z",
+                    "body": "Great. Please also add a one-page quick start by Thursday evening for the customer success team.",
+                },
+            ],
+        },
+        {
+            "threadId": "thr-009",
+            "mailboxId": "mbx-outlook",
+            "provider": "outlook",
+            "subject": "Contract Redlines and Approval Path",
+            "participants": ["legal@company.com", "maya@client.com", "devansh.work@outlook.com"],
+            "messages": [
+                {
+                    "messageId": "msg-029",
+                    "from": "legal@company.com",
+                    "to": ["devansh.work@outlook.com"],
+                    "sentAt": "2026-05-05T09:05:00Z",
+                    "body": "The client returned contract redlines. Please review the AI data processing clause and confirm whether the technical commitments are acceptable by Friday.",
+                },
+                {
+                    "messageId": "msg-030",
+                    "from": "maya@client.com",
+                    "to": ["legal@company.com", "devansh.work@outlook.com"],
+                    "sentAt": "2026-05-05T10:35:00Z",
+                    "body": "Our legal team needs approval on the security exhibit before Friday evening. The contract can move to signature once that is approved.",
+                },
+                {
+                    "messageId": "msg-031",
+                    "from": "devansh.work@outlook.com",
+                    "to": ["legal@company.com", "maya@client.com"],
+                    "sentAt": "2026-05-05T12:15:00Z",
+                    "body": "I will review the AI data processing clause and security exhibit tomorrow morning, then send approval notes before Friday evening.",
+                },
+                {
+                    "messageId": "msg-032",
+                    "from": "legal@company.com",
+                    "to": ["devansh.work@outlook.com"],
+                    "sentAt": "2026-05-06T08:30:00Z",
+                    "body": "Please call out any blockers by Thursday afternoon. If there are no blockers, reply with approved language for the contract package.",
+                },
+            ],
+        },
+        {
+            "threadId": "thr-010",
+            "mailboxId": "mbx-outlook",
+            "provider": "outlook",
+            "subject": "Pilot Support Handoff",
+            "participants": ["support@company.com", "pm@company.com", "devansh.work@outlook.com"],
+            "messages": [
+                {
+                    "messageId": "msg-033",
+                    "from": "support@company.com",
+                    "to": ["devansh.work@outlook.com", "pm@company.com"],
+                    "sentAt": "2026-05-06T10:00:00Z",
+                    "body": "Before pilot handoff, please send the escalation contacts, expected response times, and known limitations by tomorrow morning.",
+                },
+                {
+                    "messageId": "msg-034",
+                    "from": "pm@company.com",
+                    "to": ["support@company.com", "devansh.work@outlook.com"],
+                    "sentAt": "2026-05-06T10:30:00Z",
+                    "body": "Also include the launch deadline and the Friday customer check-in time in the support handoff notes.",
+                },
+                {
+                    "messageId": "msg-035",
+                    "from": "devansh.work@outlook.com",
+                    "to": ["support@company.com", "pm@company.com"],
+                    "sentAt": "2026-05-06T11:15:00Z",
+                    "body": "I will send the support handoff notes by tomorrow morning with contacts, response times, limitations, launch deadline, and Friday check-in details.",
+                },
             ],
         },
     ],
@@ -320,6 +577,103 @@ def _all_messages(table, mailbox_id=None):
     return messages
 
 
+TERM_GROUPS = {
+    "approve": {"approve", "approved", "approves", "approval", "approvals", "approving"},
+    "deadline": {"deadline", "deadlines", "due", "by", "before", "blocked", "blocker", "blockers"},
+    "invoice": {"invoice", "invoices", "payment", "vendor", "payable"},
+    "launch": {"launch", "launched", "review", "release"},
+    "meeting": {"meeting", "schedule", "scheduled", "scheduling", "calendar", "invite", "kickoff"},
+    "aws": {"aws", "gateway", "lambda", "dynamodb", "endpoint", "endpoints", "cloudops"},
+    "security": {"security", "cors", "secrets", "pii", "iam", "retention"},
+    "onboarding": {"onboarding", "handoff", "packet", "quickstart", "kickoff"},
+    "contract": {"contract", "contracts", "redline", "redlines", "legal", "clause", "signature"},
+}
+
+
+ACTION_PATTERNS = [
+    r"\bplease\s+([^.!?]+)",
+    r"\bcan you\s+([^.!?]+)",
+    r"\bcould we\s+([^.!?]+)",
+    r"\bwe need\s+([^.!?]+)",
+    r"\bneeds\s+([^.!?]+)",
+    r"\bI will\s+([^.!?]+)",
+]
+
+
+DAY_PATTERN = r"monday|tuesday|wednesday|thursday|friday|saturday|sunday"
+TIME_PATTERN = r"morning|afternoon|evening|noon|at\s+noon|at\s+5\s*pm|[0-9]{1,2}(?::[0-9]{2})?\s*(?:am|pm)"
+DUE_DATE_PATTERN = re.compile(
+    rf"\b(?:by|before)\s+(?:(?:{DAY_PATTERN})(?:\s+(?:{TIME_PATTERN}))?|"
+    rf"tomorrow(?:\s+(?:{TIME_PATTERN}))?|today|tonight|(?:{TIME_PATTERN}))\b|"
+    rf"\b(?:{DAY_PATTERN})(?:\s+(?:{TIME_PATTERN}))?\b|"
+    rf"\btomorrow(?:\s+(?:{TIME_PATTERN}))?\b",
+    re.IGNORECASE,
+)
+
+
+def _tokens(text):
+    return [t.lower() for t in re.findall(r"[a-zA-Z0-9]+", text or "")]
+
+
+def _normalize_terms(text):
+    normalized = set()
+    for token in _tokens(text):
+        matched = False
+        for canonical, variants in TERM_GROUPS.items():
+            if token in variants:
+                normalized.add(canonical)
+                normalized.update(variants)
+                matched = True
+                break
+        if len(token) <= 2:
+            continue
+        if not matched:
+            normalized.add(token)
+    return normalized
+
+
+def _sentences(messages):
+    items = []
+    for msg in messages:
+        for sentence in re.split(r"(?<=[.!?])\s+", msg.get("body", "")):
+            sentence = sentence.strip()
+            if sentence:
+                items.append((msg, sentence))
+    return items
+
+
+def _extract_due_date(text):
+    matches = DUE_DATE_PATTERN.findall(text or "")
+    if not matches:
+        return "Check email context"
+
+    cleaned = []
+    for match in matches:
+        value = match if isinstance(match, str) else match[0]
+        value = re.sub(r"\s+", " ", value.strip())
+        if value and value.lower() not in [item.lower() for item in cleaned]:
+            cleaned.append(value)
+    return ", ".join(cleaned[:2]) if cleaned else "Check email context"
+
+
+def _extract_task(text):
+    for pattern in ACTION_PATTERNS:
+        match = re.search(pattern, text or "", flags=re.IGNORECASE)
+        if match:
+            task = match.group(1).strip(" ,")
+            return task[:1].upper() + task[1:]
+    return (text or "").strip()[:160]
+
+
+def _priority_for(text):
+    lower = (text or "").lower()
+    if any(term in lower for term in ["blocked", "blocker", "deadline", "by friday", "tomorrow"]):
+        return "high"
+    if any(term in lower for term in ["please", "need", "review", "confirm", "approve"]):
+        return "medium"
+    return "low"
+
+
 def _search(table, event):
     body = _parse_body(event)
     query = body.get("query", "").strip()
@@ -328,13 +682,16 @@ def _search(table, event):
     if not query:
         return _response(400, {"error": "missing_query"})
 
-    terms = [t.lower() for t in re.findall(r"[a-zA-Z0-9]+", query) if len(t) > 2]
+    terms = _normalize_terms(query)
     messages = _all_messages(table, mailbox_id)
 
     scored = []
     for msg in messages:
-        text = f"{msg.get('subject', '')} {msg.get('body', '')}".lower()
-        score = sum(text.count(term) for term in terms)
+        text = f"{msg.get('subject', '')} {msg.get('body', '')}"
+        searchable = _normalize_terms(text)
+        exact_text = text.lower()
+        score = len(searchable.intersection(terms)) * 3
+        score += sum(exact_text.count(term) for term in terms if len(term) > 3)
 
         if score > 0:
             scored.append((score, msg))
@@ -360,8 +717,11 @@ def _search(table, event):
     if not sources:
         answer = "I could not find enough evidence in the selected mailbox to answer that."
     else:
-        joined = " ".join(src["snippet"] for src in sources[:2])
-        answer = f"Based on the matching emails, the main relevant information is: {joined}"
+        top_points = [
+            f"{src['subject']}: {src['snippet']}"
+            for src in sources[:3]
+        ]
+        answer = "Based on the matching emails:\n- " + "\n- ".join(top_points)
 
     return _response(
         200,
@@ -382,16 +742,24 @@ def _summary(table, thread_id):
 
     thread = thread_resp["thread"]
     messages = thread["messages"]
-    bullets = [m["body"][:180] for m in messages[:3]]
+    sentence_items = _sentences(messages)
+    key_points = [sentence for _, sentence in sentence_items[:4]]
+    action_candidates = [
+        sentence
+        for _, sentence in sentence_items
+        if any(term in sentence.lower() for term in ["please", "need", "confirm", "approve", "send", "review", "prepare"])
+    ]
+    next_step = _extract_task(action_candidates[-1] if action_candidates else messages[-1].get("body", ""))
 
     return _response(
         200,
         {
             "threadId": thread_id,
             "summary": {
-                "short": f"This thread is about: {thread['subject']}.",
-                "keyPoints": bullets,
-                "openQuestions": ["Confirm completion status and next deadline if needed."],
+                "short": f"{thread['subject']} is active with {len(messages)} messages and clear follow-up needed.",
+                "keyPoints": key_points[:4],
+                "nextStep": next_step,
+                "openQuestions": [f"Next step: {next_step}"],
             },
             "model": "template",
         },
@@ -406,11 +774,15 @@ def _draft_reply(table, thread_id, event):
     if "error" in thread_resp:
         return _response(404, thread_resp)
 
-    subject = thread_resp["thread"]["subject"]
+    thread = thread_resp["thread"]
+    subject = thread["subject"]
+    action_items = json.loads(_action_items(table, thread_id)["body"]).get("actionItems", [])
+    next_action = action_items[0]["task"] if action_items else intent
 
     draft = (
-        f"Hi,\n\nThanks for the update on {subject}. "
-        f"I will {intent}. Please let me know if there is anything else I should include.\n\n"
+        f"Hi,\n\nThanks for the update on {subject}. I have the next step captured: "
+        f"{next_action}. I will follow up with the requested details and flag any blockers as soon as I find them.\n\n"
+        "Please let me know if there is a specific format or stakeholder list you want me to use.\n\n"
         "Best,\nDevansh"
     )
 
@@ -432,17 +804,18 @@ def _action_items(table, thread_id):
     action_items = []
     messages = thread_resp["thread"]["messages"]
 
-    keywords = ["please", "need", "approve", "send", "prepare", "confirm", "review"]
+    keywords = ["please", "need", "approve", "approval", "send", "prepare", "confirm", "review", "schedule", "include"]
     for msg in messages:
         body = msg.get("body", "")
         lower = body.lower()
         if any(k in lower for k in keywords):
+            task = _extract_task(body)
             action_items.append(
                 {
-                    "task": body[:160],
+                    "task": task[:160],
                     "owner": "Devansh",
-                    "dueDate": "Check email context",
-                    "priority": "medium",
+                    "dueDate": _extract_due_date(body),
+                    "priority": _priority_for(body),
                     "sourceMessageId": msg["messageId"],
                     "status": "open",
                 }

@@ -17,3 +17,5 @@ override.tf.json
 terraform.rc
 *.zip
 .DS_Store
+frontend/.env
+frontend/dist/

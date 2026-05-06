@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+const USER_EMAILS = new Set(['devansh.demo@gmail.com', 'devansh.work@outlook.com'])
 
 function formatDate(value) {
   if (!value) return ''
@@ -45,48 +46,87 @@ async function apiFetch(path, options = {}) {
 
 function MailboxSelector({ mailboxes, selectedMailboxId, onChange, loading }) {
   return (
-    <label className="field">
-      <span>Mailbox</span>
-      <select
-        value={selectedMailboxId}
-        onChange={(event) => onChange(event.target.value)}
-        disabled={loading || mailboxes.length === 0}
-      >
+    <section className="mailbox-switcher" aria-label="Mailboxes">
+      <div className="section-kicker">Mailboxes</div>
+      <div className="mailbox-options">
         {mailboxes.map((mailbox) => (
-          <option key={mailbox.mailboxId} value={mailbox.mailboxId}>
-            {mailbox.displayName || mailbox.email}
-          </option>
+          <button
+            className={`mailbox-option ${
+              selectedMailboxId === mailbox.mailboxId ? 'active' : ''
+            }`}
+            disabled={loading}
+            key={mailbox.mailboxId}
+            onClick={() => onChange(mailbox.mailboxId)}
+            type="button"
+          >
+            <span>{mailbox.displayName || mailbox.email}</span>
+            <small>{mailbox.email}</small>
+          </button>
         ))}
-      </select>
-    </label>
+      </div>
+    </section>
   )
 }
 
-function ThreadList({ threads, selectedThreadId, onSelect, loading }) {
+function getThreadMessageCount(thread, selectedThreadId, selectedThread) {
+  if (
+    selectedThread?.threadId === thread.threadId &&
+    Array.isArray(selectedThread.messages)
+  ) {
+    return selectedThread.messages.length
+  }
+
+  if (selectedThreadId === thread.threadId) {
+    return null
+  }
+
+  return Number.isFinite(thread.messageCount) && thread.messageCount > 0
+    ? thread.messageCount
+    : null
+}
+
+function ThreadList({ threads, selectedThreadId, selectedThread, onSelect, loading }) {
   return (
-    <section className="panel thread-list-panel">
+    <section className="thread-list-panel">
       <div className="panel-header">
         <h2>Threads</h2>
         <span className="muted">{loading ? 'Loading' : `${threads.length} total`}</span>
       </div>
 
       <div className="thread-list">
-        {threads.map((thread) => (
-          <button
-            className={`thread-row ${
-              selectedThreadId === thread.threadId ? 'selected' : ''
-            }`}
-            key={thread.threadId}
-            type="button"
-            onClick={() => onSelect(thread.threadId)}
-          >
-            <span className="thread-subject">{thread.subject}</span>
-            <span className="thread-meta">
-              {thread.participants?.slice(0, 2).join(', ')}
-            </span>
-            <span className="thread-preview">{thread.preview}</span>
-          </button>
-        ))}
+        {threads.map((thread) => {
+          const messageCount = getThreadMessageCount(
+            thread,
+            selectedThreadId,
+            selectedThread,
+          )
+
+          return (
+            <button
+              className={`thread-row ${
+                selectedThreadId === thread.threadId ? 'selected' : ''
+              }`}
+              key={thread.threadId}
+              type="button"
+              onClick={() => onSelect(thread.threadId)}
+            >
+              <span className="thread-row-top">
+                <span className="thread-subject">{thread.subject}</span>
+                <span className="provider-badge">{thread.provider}</span>
+              </span>
+              <span className="thread-meta">
+                {thread.participants?.slice(0, 2).join(', ')}
+              </span>
+              <span className="thread-preview">{thread.preview}</span>
+              <span className="thread-foot">
+                <span>
+                  {messageCount ? `${messageCount} messages` : 'Messages'}
+                </span>
+                <span>{selectedThreadId === thread.threadId ? 'Selected' : 'Open thread'}</span>
+              </span>
+            </button>
+          )
+        })}
 
         {!loading && threads.length === 0 && (
           <div className="empty-state">No threads found for this mailbox.</div>
@@ -97,11 +137,14 @@ function ThreadList({ threads, selectedThreadId, onSelect, loading }) {
 }
 
 function MessageCard({ message }) {
+  const isMine = USER_EMAILS.has((message.from || '').toLowerCase())
+
   return (
-    <article className="message-card">
+    <article className={`message-card ${isMine ? 'sent' : 'received'}`}>
       <div className="message-header">
         <div>
-          <strong>{message.from}</strong>
+          <strong>{isMine ? 'You' : message.from}</strong>
+          {isMine && <div className="muted">{message.from}</div>}
           <div className="muted">To {message.to?.join(', ') || 'Unknown'}</div>
         </div>
         <time>{formatDate(message.sentAt)}</time>
@@ -117,23 +160,28 @@ function ThreadDetail({ thread, loading }) {
       {loading && <div className="empty-state">Loading thread...</div>}
 
       {!loading && !thread && (
-        <div className="empty-state">Select a thread to view messages.</div>
+        <div className="empty-state tall">
+          <strong>No thread selected</strong>
+          <span>Select an email thread from the left panel to inspect messages.</span>
+        </div>
       )}
 
       {!loading && thread && (
         <>
-          <div className="detail-title">
-            <div>
-              <span className="eyebrow">{thread.provider}</span>
-              <h2>{thread.subject}</h2>
+          <div className="detail-header">
+            <div className="detail-title">
+              <div>
+                <span className="provider-badge large">{thread.provider}</span>
+                <h2>{thread.subject}</h2>
+              </div>
+              <span className="pill">{thread.messages?.length || 0} messages</span>
             </div>
-            <span className="pill">{thread.messages?.length || 0} messages</span>
-          </div>
 
-          <div className="participants">
-            {thread.participants?.map((participant) => (
-              <span key={participant}>{participant}</span>
-            ))}
+            <div className="participants">
+              {thread.participants?.map((participant) => (
+                <span key={participant}>{participant}</span>
+              ))}
+            </div>
           </div>
 
           <div className="messages">
@@ -175,7 +223,7 @@ function SearchPanel({ mailboxId, onOpenThread }) {
   }
 
   return (
-    <section className="panel">
+    <section className="tool-section">
       <div className="panel-header">
         <h2>Search</h2>
         {result?.retrievalMode && <span className="muted">{result.retrievalMode}</span>}
@@ -194,6 +242,12 @@ function SearchPanel({ mailboxId, onOpenThread }) {
       </form>
 
       {error && <div className="error">{error}</div>}
+
+      {!result && !error && (
+        <div className="empty-state compact">
+          Search across the selected mailbox to get an answer with cited sources.
+        </div>
+      )}
 
       {result && (
         <div className="result-card search-result">
@@ -223,6 +277,7 @@ function SearchPanel({ mailboxId, onOpenThread }) {
                 <span>
                   {source.sender} · {formatDate(source.sentAt)}
                 </span>
+                <span className="source-thread-id">Thread {source.threadId}</span>
                 <p>{source.snippet}</p>
               </button>
             ))}
@@ -237,7 +292,13 @@ function SearchPanel({ mailboxId, onOpenThread }) {
 }
 
 function SummaryOutput({ output }) {
-  if (!output) return null
+  if (!output) {
+    return (
+      <div className="empty-state compact">
+        Choose Summary, Draft Reply, or Action Items to generate thread assistance.
+      </div>
+    )
+  }
 
   if (output.summary) {
     return (
@@ -287,17 +348,22 @@ function SummaryOutput({ output }) {
           <span>{output.actionItems.length} found</span>
         </div>
         {output.actionItems.length === 0 && <p>No action items found.</p>}
-        {output.actionItems.map((item) => (
-          <div className="action-item" key={`${item.sourceMessageId}-${item.task}`}>
-            <strong>{item.task}</strong>
-            <div className="item-meta">
-              <span>{item.owner}</span>
-              <span>Due: {item.dueDate}</span>
-              <span>{item.priority}</span>
-              <span>{item.status}</span>
+        <div className="action-table">
+          {output.actionItems.map((item) => (
+            <div className="action-item" key={`${item.sourceMessageId}-${item.task}`}>
+              <span className="checkmark" aria-hidden="true"></span>
+              <div>
+                <strong>{item.task}</strong>
+                <div className="item-meta">
+                  <span>{item.owner}</span>
+                  <span>Due: {item.dueDate}</span>
+                  <span>{item.priority}</span>
+                  <span>{item.status}</span>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     )
   }
@@ -339,7 +405,7 @@ function AiActionsPanel({ selectedThreadId }) {
   }
 
   return (
-    <section className="panel">
+    <section className="tool-section">
       <div className="panel-header">
         <h2>AI Assist</h2>
       </div>
@@ -361,7 +427,7 @@ function AiActionsPanel({ selectedThreadId }) {
         <div className="empty-state compact">Select a thread to use AI actions.</div>
       )}
       {error && <div className="error">{error}</div>}
-      <SummaryOutput output={output} />
+      {selectedThreadId && <SummaryOutput output={output} />}
     </section>
   )
 }
@@ -489,34 +555,40 @@ function App() {
   return (
     <main className="app-shell">
       <header className="app-header">
-        <div>
-          <span className="eyebrow">Email RAG SaaS</span>
-          <h1>Inbox Intelligence Demo</h1>
-          <p>Search, cite, summarize, and draft replies from realistic inbox data.</p>
+        <div className="brand-lockup">
+          <div className="brand-mark">M</div>
+          <div>
+            <h1>Mail Manager</h1>
+            <p>AI-powered email search, summaries, replies, and action items</p>
+          </div>
         </div>
-        <MailboxSelector
-          mailboxes={mailboxes}
-          selectedMailboxId={selectedMailboxId}
-          onChange={handleSelectMailbox}
-          loading={loading.mailboxes}
-        />
+        <div className="status-badge">AWS Connected</div>
       </header>
 
       {error && <div className="error global-error">{error}</div>}
 
       <div className="workspace">
-        <ThreadList
-          threads={threads}
-          selectedThreadId={selectedThreadId}
-          onSelect={setSelectedThreadId}
-          loading={loading.threads}
-        />
+        <aside className="panel mailbox-column">
+          <MailboxSelector
+            mailboxes={mailboxes}
+            selectedMailboxId={selectedMailboxId}
+            onChange={handleSelectMailbox}
+            loading={loading.mailboxes}
+          />
+          <ThreadList
+            threads={threads}
+            selectedThreadId={selectedThreadId}
+            selectedThread={selectedThread}
+            onSelect={setSelectedThreadId}
+            loading={loading.threads}
+          />
+        </aside>
 
         <ThreadDetail thread={selectedThread} loading={loading.thread} />
 
-        <aside className="assist-column">
+        <aside className="panel assist-column">
           <SearchPanel mailboxId={selectedMailboxId} onOpenThread={handleOpenThread} />
-          <AiActionsPanel selectedThreadId={selectedThreadId} />
+          <AiActionsPanel key={selectedThreadId || 'empty'} selectedThreadId={selectedThreadId} />
         </aside>
       </div>
     </main>

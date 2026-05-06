@@ -26,8 +26,12 @@ data "aws_iam_policy_document" "api_lambda" {
   statement {
     sid = "DynamoDB"
     actions = [
-      "dynamodb:PutItem",
       "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:Scan",
+      "dynamodb:Query",
+      "dynamodb:UpdateItem",
+      "dynamodb:BatchWriteItem",
     ]
     resources = [aws_dynamodb_table.metadata.arn]
   }

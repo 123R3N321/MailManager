@@ -2,9 +2,9 @@
 
 Mail Manager is a cloud-based Email RAG SaaS demo that helps users search email threads, summarize conversations, generate draft replies, and extract action items.
 
-==================================================
-FEATURES
-==================================================
+---
+
+# Features
 
 - Gmail and Outlook demo inbox switching
 - Email thread viewer
@@ -15,125 +15,155 @@ FEATURES
 - Action item extraction
 - AWS-hosted frontend and backend
 
-==================================================
-ARCHITECTURE
-==================================================
+---
+
+# Architecture
 
 Frontend Flow:
 
+```text
 S3 Static Website → API Gateway → Lambda → DynamoDB / S3 / SQS
+```
 
-AWS Services Used:
+## AWS Services Used
 
-1. Amazon S3
+### Amazon S3
 - Hosts frontend website
 - Stores raw demo email JSON
 
-2. API Gateway
+### API Gateway
 - Exposes backend HTTP API endpoints
 
-3. AWS Lambda
+### AWS Lambda
 - Handles backend API logic
 - Search handling
 - Summary generation
 - Draft reply generation
 - Action item extraction
 
-4. DynamoDB
+### DynamoDB
 - Stores mailbox metadata
 - Stores email threads/messages
 
-5. Amazon SQS
+### Amazon SQS
 - Async ingestion queue scaffold
 
-6. CloudWatch
+### CloudWatch
 - Logging and monitoring
 
-7. Secrets Manager
+### Secrets Manager
 - Placeholder OAuth secret storage
 
-==================================================
-HOSTED URLS
-==================================================
+---
 
-Frontend:
+# Hosted URLs
+
+## Frontend
+
+```text
 http://mailmanager-demo-frontend-devansh.s3-website-us-east-1.amazonaws.com
+```
 
-Backend API:
+## Backend API
+
+```text
 https://2jnfchgyjb.execute-api.us-east-1.amazonaws.com/
+```
 
-==================================================
-LOCAL DEVELOPMENT
-==================================================
+---
+
+# Local Development
 
 Run locally:
 
+```bash
 cd frontend
 npm install
 npm run dev
+```
 
-Create frontend/.env:
+Create `frontend/.env`:
 
+```bash
 VITE_API_BASE_URL=https://2jnfchgyjb.execute-api.us-east-1.amazonaws.com/
+```
 
-==================================================
-BUILD FRONTEND
-==================================================
+---
 
+# Build Frontend
+
+```bash
 cd frontend
 npm run build
+```
 
-==================================================
-DEPLOY FRONTEND
-==================================================
+---
 
+# Deploy Frontend
+
+```bash
 aws s3 sync dist/ s3://mailmanager-demo-frontend-devansh --delete
+```
 
-==================================================
-SEED DEMO DATA
-==================================================
+---
 
+# Seed Demo Data
+
+```bash
 API_URL="https://2jnfchgyjb.execute-api.us-east-1.amazonaws.com/"
 
 curl -sS -X POST "${API_URL}ingest/demo" | jq .
+```
 
-==================================================
-EXAMPLE API CALLS
-==================================================
+---
 
-Get Mailboxes:
+# Example API Calls
 
+## Get Mailboxes
+
+```bash
 curl -sS "${API_URL}mailboxes" | jq .
+```
 
-Get Threads:
+## Get Threads
 
+```bash
 curl -sS "${API_URL}threads?mailboxId=mbx-gmail" | jq .
+```
 
-Search Inbox:
+## Search Inbox
 
+```bash
 curl -sS -X POST "${API_URL}search" \
   -H "Content-Type: application/json" \
   -d '{"query":"what approvals are pending","mailboxId":"mbx-gmail"}' | jq .
+```
 
-Generate Summary:
+## Generate Summary
 
+```bash
 curl -sS -X POST "${API_URL}threads/thr-001/summary" | jq .
+```
 
-Generate Draft Reply:
+## Generate Draft Reply
 
+```bash
 curl -sS -X POST "${API_URL}threads/thr-001/draft-reply" \
   -H "Content-Type: application/json" \
   -d '{"intent":"confirm approval timing"}' | jq .
+```
 
-Extract Action Items:
+## Extract Action Items
 
+```bash
 curl -sS -X POST "${API_URL}threads/thr-001/action-items" | jq .
+```
 
-==================================================
-CURRENT MVP STATUS
-==================================================
+---
 
-Implemented:
+# Current MVP Status
+
+## Implemented
 
 - AWS-hosted frontend
 - AWS API backend
@@ -145,29 +175,29 @@ Implemented:
 - Template-based action item extraction
 - Terraform infrastructure deployment
 
-==================================================
-PLANNED IMPROVEMENTS
-==================================================
+---
 
-Amazon Bedrock:
+# Planned Improvements
+
+## Amazon Bedrock
 - Real LLM-powered summaries
 - Smart replies
 - AI action item extraction
 
-OpenSearch:
+## OpenSearch
 - Semantic/vector search
 - Better RAG retrieval pipeline
 
-OAuth Integration:
+## OAuth Integration
 - Real Gmail linking
 - Real Outlook linking
 
-Authentication:
+## Authentication
 - Cognito-based authentication
 
-==================================================
-NOTES
-==================================================
+---
+
+# Notes
 
 This project is currently an MVP/demo implementation focused on:
 

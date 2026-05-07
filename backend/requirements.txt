@@ -1,0 +1,9 @@
+boto3>=1.34.0
+opensearch-py
+requests-aws4auth
+fastapi
+mangum
+uvicorn
+pydantic
+pydantic-settings
+email-validator

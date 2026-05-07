@@ -19,6 +19,6 @@ resource "aws_iam_policy" "bedrock_access" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_bedrock" {
-  role       = aws_iam_role.api_lambda.arn
+  role       = aws_iam_role.api_lambda.name
   policy_arn = aws_iam_policy.bedrock_access.arn
 }

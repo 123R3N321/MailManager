@@ -42,3 +42,17 @@ resource "aws_apigatewayv2_route" "default" {
   route_key = "$default"
   target    = "integrations/${aws_apigatewayv2_integration.api.id}"
 }
+
+data "aws_iam_policy_document" "api_lambda" {
+  # ... (keep existing Logs, DynamoDB, S3WriteHealth, SecretsRead, and SqsSend statements) ...
+
+  statement {
+    sid = "RAGAccess"
+    actions = [
+      "bedrock:InvokeModel",
+      "es:ESHttpPost",
+      "es:ESHttpGet",
+    ]
+    resources = ["*"] 
+  }
+}

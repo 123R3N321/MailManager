@@ -469,7 +469,7 @@ def _bedrock_embedding(text):
     return embedding
 
 
-def _signed_opensearch_post(path, payload):
+def _signed_opensearch_request(method, path, payload):
     base_url = (os.environ.get("OPENSEARCH_URL") or "").rstrip("/")
     if not base_url:
         raise ValueError("OPENSEARCH_URL is not configured")
@@ -478,7 +478,7 @@ def _signed_opensearch_post(path, payload):
     url = f"{base_url}{path}"
     body = json.dumps(payload).encode("utf-8")
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    request = AWSRequest(method="POST", url=url, data=body, headers=headers)
+    request = AWSRequest(method=method, url=url, data=body, headers=headers)
     credentials = boto3.Session().get_credentials()
     if credentials is None:
         raise ValueError("AWS credentials are not available for OpenSearch request signing")
@@ -489,7 +489,7 @@ def _signed_opensearch_post(path, payload):
         url=prepared.url,
         data=body,
         headers=dict(prepared.headers),
-        method="POST",
+        method=method,
     )
 
     try:
@@ -498,6 +498,10 @@ def _signed_opensearch_post(path, payload):
     except urllib.error.HTTPError as exc:
         error_body = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"OpenSearch HTTP {exc.code}: {error_body}") from exc
+
+
+def _signed_opensearch_post(path, payload):
+    return _signed_opensearch_request("POST", path, payload)
 
 
 def _opensearch_vector_sources(query, mailbox_id=None, top_k=5):
@@ -1109,6 +1113,118 @@ def _action_items(table, thread_id):
     )
 
 
+def _setup_index():
+    index_name = os.environ.get("INDEX_NAME", "mailmanager-index")
+    mapping = {
+        "settings": {"index": {"knn": True}},
+        "mappings": {
+            "properties": {
+                "email_vector": {"type": "knn_vector", "dimension": 1536},
+                "threadId":     {"type": "keyword"},
+                "messageId":    {"type": "keyword"},
+                "mailboxId":    {"type": "keyword"},
+                "subject":      {"type": "text"},
+                "sender":       {"type": "keyword"},
+                "sentAt":       {"type": "date"},
+                "snippet":      {"type": "text"},
+                "body":         {"type": "text"},
+            }
+        },
+    }
+    try:
+        result = _signed_opensearch_request("PUT", f"/{index_name}", mapping)
+        return _response(200, {"status": "created", "index": index_name, "detail": result})
+    except RuntimeError as exc:
+        msg = str(exc)
+        if "resource_already_exists_exception" in msg:
+            return _response(200, {"status": "already_exists", "index": index_name})
+        return _response(500, {"error": msg})
+
+
+def _generate_reply(event):
+    body = _parse_body(event)
+    subject = (body.get("subject") or "(no subject)").strip()
+    sender_name = (body.get("senderName") or "Unknown").strip()
+    sender_email = (body.get("senderEmail") or "").strip()
+    body_text = (body.get("bodyText") or "").strip()
+    thread_history = body.get("threadHistory") or []
+    tone = body.get("tone") or "professional"
+
+    if not body_text and not subject:
+        return _response(400, {"error": "missing_content"})
+
+    # RAG: pull relevant inbox context from OpenSearch to ground the reply
+    retrieval_mode = "none"
+    retrieved_count = 0
+    rag_context = ""
+    try:
+        query = f"{subject} {body_text[:300]}"
+        sources = _opensearch_vector_sources(query, top_k=3)
+        if sources:
+            retrieval_mode = "opensearch-vector"
+            retrieved_count = len(sources)
+            rag_context = _format_sources_for_prompt(sources)
+        else:
+            logger.info("/reply: OpenSearch returned no results; skipping RAG context")
+    except Exception as exc:
+        logger.exception("/reply: OpenSearch retrieval failed; proceeding without RAG context: %s", exc)
+
+    tone_instruction = {
+        "professional": "Write a professional and polished reply.",
+        "casual": "Write a friendly and casual reply.",
+        "brief": "Write a very short and direct reply (2-3 sentences max).",
+    }.get(tone, "Write a professional reply.")
+
+    history_section = ""
+    if thread_history:
+        history_section = (
+            "\n\nEarlier messages in this thread (oldest first):\n"
+            + "\n\n".join(f"[{i + 1}] {msg}" for i, msg in enumerate(thread_history[:5]))
+        )
+
+    rag_section = f"\n\nRelevant context from inbox:\n{rag_context}" if rag_context else ""
+
+    prompt = (
+        f"You are drafting an email reply on behalf of the user."
+        f"{history_section}{rag_section}\n\n"
+        f"Email to reply to:\n"
+        f"From: {sender_name} <{sender_email}>\n"
+        f"Subject: {subject}\n\n"
+        f"{body_text}\n\n"
+        f"---\n"
+        f"{tone_instruction} Output only the reply text, no subject line, no greeting label."
+    )
+
+    model = "template"
+    reply_text = ""
+    try:
+        reply_text = _bedrock_invoke_claude(prompt, max_tokens=512)
+        if reply_text:
+            model = "bedrock"
+        else:
+            raise ValueError("Bedrock returned empty reply")
+    except Exception as exc:
+        logger.exception("/reply: Bedrock generation failed; using template fallback: %s", exc)
+        reply_text = (
+            f"Hi {sender_name},\n\n"
+            f"Thank you for your email regarding {subject}. "
+            f"I will review the details and follow up with you shortly.\n\n"
+            "Best regards"
+        )
+
+    return _response(
+        200,
+        {
+            "replyText": reply_text,
+            "modelUsed": _bedrock_model_id(),
+            "truncated": False,
+            "retrievedCount": retrieved_count,
+            "retrievalMode": retrieval_mode,
+            "model": model,
+        },
+    )
+
+
 def handler(event, context):
     table = _get_table()
     bucket_name = _get_bucket()
@@ -1153,6 +1269,12 @@ def handler(event, context):
     if method == "GET" and path.startswith("/threads/"):
         thread_id = path.split("/")[-1]
         return _get_thread(table, thread_id)
+
+    if method == "POST" and path == "/admin/setup-index":
+        return _setup_index()
+
+    if method == "POST" and path == "/reply":
+        return _generate_reply(event)
 
     if method == "POST" and path == "/search":
         return _search(table, event)

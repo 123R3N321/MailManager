@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  js-tests:
+    name: JS unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: node --experimental-vm-modules node_modules/.bin/jest --ci
+
+  python-lint:
+    name: Python lint (Lambda handlers)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint api handler
+        run: ruff check infra/terraform/lambda/api/handler.py
+
+      - name: Lint worker handler
+        run: ruff check infra/terraform/lambda/worker/handler.py

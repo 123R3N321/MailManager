@@ -1,31 +1,40 @@
+# Build artifacts
 .build/
-.terraform/
 infra/.build/
 infra/terraform/.build/
+frontend/dist/
+
+# Terraform
+.terraform/
 *.tfstate
 *.tfstate.*
 *.tfvars
 !examples/demo.tfvars
 !**/examples/demo.tfvars
+
 crash.log
 crash.*.log
+
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
 .terraformrc
 terraform.rc
-*.zip
-.DS_Store
-frontend/.env
-frontend/dist/
 
-# Terraform local state and generated files
-*.tfstate
-*.tfstate.*
-infra/terraform/output.json
-infra/terraform/request.json
-infra/terraform/response.json
-infra/terraform/policy.json
-infra/terraform/*.txt
-infra/terraform/*.pdf
+# Generated / temporary files
+*.zip
+*.txt
+*.pdf
+output.json
+request.json
+response.json
+policy.json
+
+# Environment files
+.env
+frontend/.env
+
+# OS files
+.DS_Store

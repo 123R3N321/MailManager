@@ -2,7 +2,7 @@ const PROVIDER_LABELS = {
   dummy:        "Dummy (Test)",
   claude:       "Claude",
   openai:       "OpenAI",
-  "aws-backend": "AWS Backend (RAG)",
+  "aws_backend": "AWS Backend (RAG)",
 };
 
 async function init() {

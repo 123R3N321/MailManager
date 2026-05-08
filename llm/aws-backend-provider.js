@@ -4,14 +4,15 @@
 
 export const awsBackendProvider = {
   name: "AWS Backend (RAG)",
-  id: "aws-backend",
+  id: "aws_backend",
 
   isConfigured(config) {
     return Boolean(config.apiUrl && config.apiUrl.startsWith("https://"));
   },
 
   async generateReply(request, config) {
-    const response = await fetch(`${config.apiUrl}/reply`, {
+    const baseUrl = config.apiUrl.replace(/\/$/, "");
+    const response = await fetch(`${baseUrl}/reply`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

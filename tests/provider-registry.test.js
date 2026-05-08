@@ -16,9 +16,9 @@ describe("provider-registry", () => {
     expect(p.id).toBe("openai");
   });
 
-  test("getProvider returns aws-backend provider", () => {
-    const p = getProvider("aws-backend");
-    expect(p.id).toBe("aws-backend");
+  test("getProvider returns aws_backend provider", () => {
+    const p = getProvider("aws_backend");
+    expect(p.id).toBe("aws_backend");
   });
 
   test("getProvider throws on unknown id", () => {
@@ -31,7 +31,7 @@ describe("provider-registry", () => {
     expect(ids).toContain("dummy");
     expect(ids).toContain("claude");
     expect(ids).toContain("openai");
-    expect(ids).toContain("aws-backend");
+    expect(ids).toContain("aws_backend");
   });
 
   test("all providers have required methods", () => {

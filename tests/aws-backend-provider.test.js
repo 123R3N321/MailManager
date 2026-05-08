@@ -17,8 +17,8 @@ let mockFetchImpl = null;
 global.fetch = async (...args) => { lastFetchArgs = args; return mockFetchImpl(...args); };
 
 describe("awsBackendProvider", () => {
-  test("id is 'aws-backend'", () => {
-    expect(awsBackendProvider.id).toBe("aws-backend");
+  test("id is 'aws_backend'", () => {
+    expect(awsBackendProvider.id).toBe("aws_backend");
   });
 
   test("isConfigured requires an https apiUrl", () => {
@@ -66,7 +66,7 @@ describe("awsBackendProvider", () => {
 
     const result = await awsBackendProvider.generateReply(BASE_REQUEST, VALID_CONFIG);
     expect(result.replyText).toBe("No problem, Dana.");
-    expect(result.providerId).toBe("aws-backend");
+    expect(result.providerId).toBe("aws_backend");
     expect(result.modelUsed).toBe("claude-haiku");
     expect(result.retrievedCount).toBe(3);
   });

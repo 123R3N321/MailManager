@@ -118,7 +118,10 @@
         showModal(null, null, response.error.message);
       }
     } catch (err) {
-      showModal(null, null, "Extension error: " + err.message);
+      const msg = err.message.includes("Extension context invalidated")
+        ? "Extension was reloaded — please refresh this Gmail tab and try again."
+        : "Extension error: " + err.message;
+      showModal(null, null, msg);
     } finally {
       btn.disabled = false;
       btn.textContent = "✨ Generate AI Reply";

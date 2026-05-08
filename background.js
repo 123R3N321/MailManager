@@ -46,7 +46,7 @@ async function handleGenerateReply(payload) {
       success: false,
       error: {
         code: "NOT_CONFIGURED",
-        message: `${provider.name} requires an API key. Open the extension options to add one.`,
+        message: `${provider.name} is not configured. Open the extension options to set it up.`,
         providerId,
       },
     };

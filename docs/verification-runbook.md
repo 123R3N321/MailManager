@@ -6,6 +6,12 @@ All commands use the values from the current Terraform deployment. Set the varia
 
 ## 0. Variables (set once per session)
 
+You need to configure the basic metadata before running the commands, by configure your ``.env`` then calling:
+```bash
+source scripts/env.sh
+```
+from project root dir; alternatiely, feel free to manually configure:
+
 ```bash
 export API_URL="https://8xw0hh7pdf.execute-api.us-east-1.amazonaws.com"
 export REGION="us-east-1"
@@ -195,6 +201,11 @@ aws logs tail /aws/lambda/$LAMBDA_API \
   --region $REGION \
   --follow \
   --format short
+```
+
+### Watch API worker live (fires whenever user clicks ai reply plug-in button)
+```bash
+aws logs tail /aws/lambda/$LAMBDA_API --region $REGION --follow --format short
 ```
 
 ### Watch ingest worker live (fires when SQS messages arrive)

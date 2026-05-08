@@ -43,7 +43,7 @@ export const awsBackendProvider = {
 
     return {
       replyText:      data.replyText,
-      providerId:     "aws-backend",
+      providerId:     "aws_backend",
       modelUsed:      data.modelUsed || "bedrock-claude",
       truncated:      data.truncated || false,
       retrievedCount: data.retrievedCount ?? 0,

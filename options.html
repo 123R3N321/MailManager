@@ -48,19 +48,19 @@
         <label for="provider-select">LLM Provider</label>
         <select id="provider-select">
           <option value="dummy">Dummy (Test Mode — no API key needed)</option>
-          <option value="aws-backend">AWS Backend (RAG via Bedrock)</option>
+          <option value="aws_backend">AWS Backend (RAG via Bedrock)</option>
           <option value="claude">Claude (Anthropic)</option>
           <option value="openai">OpenAI</option>
         </select>
       </div>
     </section>
 
-    <section id="aws-backend-section">
+    <section id="aws_backend-section">
       <h3 style="margin-top:0">AWS Backend Settings</h3>
       <div class="field-group">
         <label for="aws-api-url">API Gateway URL</label>
         <input type="text" id="aws-api-url" placeholder="https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com" />
-        <p class="hint">Run <code>terraform apply</code> in infrastructure/ — the URL is printed as <code>api_url</code>.</p>
+        <p class="hint">Run <code>terraform apply</code> in <code>infra/terraform/</code> — the URL is printed as <code>api_invoke_url</code>.</p>
       </div>
     </section>
 

@@ -3,7 +3,8 @@ import { getSettings, saveSettings } from "./utils/storage.js";
 async function init() {
   const settings = await getSettings();
 
-  document.getElementById("provider-select").value = settings.activeProviderId;
+  const storedProvider = settings.activeProviderId === "aws-backend" ? "aws_backend" : settings.activeProviderId;
+  document.getElementById("provider-select").value = storedProvider;
   document.getElementById("aws-api-url").value = settings.aws_backend_apiUrl || "";
   document.getElementById("claude-key").value = settings.claude_apiKey || "";
   document.getElementById("claude-model").value = settings.claude_model;
@@ -38,8 +39,8 @@ async function init() {
 }
 
 function updateSectionVisibility(providerId) {
-  document.getElementById("aws-backend-section").style.display =
-    providerId === "aws-backend" ? "block" : "none";
+  document.getElementById("aws_backend-section").style.display =
+    providerId === "aws_backend" ? "block" : "none";
   document.getElementById("claude-section").style.display =
     providerId === "claude" ? "block" : "none";
   document.getElementById("openai-section").style.display =

@@ -1,0 +1,60 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Tag and publish release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute next version tag
+        id: tag
+        run: |
+          # Find the latest v<major>.<minor>.<patch> tag; default to v0.0.0 if none exist.
+          latest=$(git tag --list 'v*.*.*' --sort=-version:refname | head -1)
+          latest=${latest:-v0.0.0}
+          IFS='.' read -r major minor patch <<< "${latest#v}"
+          next_patch=$((patch + 1))
+          echo "tag=v${major}.${minor}.${next_patch}" >> "$GITHUB_OUTPUT"
+          echo "latest=${latest}" >> "$GITHUB_OUTPUT"
+
+      - name: Push tag
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.tag.outputs.tag }}"
+          git push origin "${{ steps.tag.outputs.tag }}"
+
+      - name: Build release notes
+        id: notes
+        run: |
+          prev="${{ steps.tag.outputs.latest }}"
+          if [ "$prev" = "v0.0.0" ]; then
+            log=$(git log --oneline)
+          else
+            log=$(git log --oneline "${prev}..HEAD")
+          fi
+          {
+            echo "notes<<EOF"
+            echo "## What's changed"
+            echo ""
+            echo "$log"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.tag.outputs.tag }}" \
+            --title "${{ steps.tag.outputs.tag }}" \
+            --notes "${{ steps.notes.outputs.notes }}"

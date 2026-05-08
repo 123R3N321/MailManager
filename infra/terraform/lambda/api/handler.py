@@ -1,18 +1,32 @@
 import json
+import logging
 import os
 import re
 import time
+import urllib.error
+import urllib.request
 from decimal import Decimal
 
 import boto3
+from botocore.auth import SigV4Auth
+from botocore.awsrequest import AWSRequest
 from boto3.dynamodb.conditions import Attr
 
 _s3 = boto3.client("s3")
 _sqs = boto3.client("sqs")
 _ddb = boto3.resource("dynamodb")
+_bedrock = boto3.client(
+    "bedrock-runtime",
+    region_name=os.environ.get("BEDROCK_REGION") or os.environ.get("APP_AWS_REGION", "us-east-1"),
+)
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 DEMO_USER_ID = "demo-user-001"
+DEFAULT_BEDROCK_MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
+DEFAULT_EMBEDDING_MODEL_ID = "amazon.titan-embed-text-v1"
 
 
 DEMO_DATA = {
@@ -409,6 +423,165 @@ def _now():
     return int(time.time())
 
 
+def _bedrock_model_id():
+    return os.environ.get("BEDROCK_MODEL_ID", DEFAULT_BEDROCK_MODEL_ID)
+
+
+def _embedding_model_id():
+    return os.environ.get("EMBEDDING_MODEL_ID", DEFAULT_EMBEDDING_MODEL_ID)
+
+
+def _bedrock_invoke_claude(prompt, max_tokens=900):
+    body = json.dumps(
+        {
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": max_tokens,
+            "temperature": 0.2,
+            "messages": [{"role": "user", "content": prompt}],
+        }
+    )
+
+    response = _bedrock.invoke_model(
+        modelId=_bedrock_model_id(),
+        body=body,
+        accept="application/json",
+        contentType="application/json",
+    )
+    payload = json.loads(response["body"].read())
+    return "\n".join(
+        part.get("text", "")
+        for part in payload.get("content", [])
+        if part.get("type") == "text" or "text" in part
+    ).strip()
+
+
+def _bedrock_embedding(text):
+    response = _bedrock.invoke_model(
+        modelId=_embedding_model_id(),
+        body=json.dumps({"inputText": text}),
+        accept="application/json",
+        contentType="application/json",
+    )
+    payload = json.loads(response["body"].read())
+    embedding = payload.get("embedding")
+    if not embedding:
+        raise ValueError("Bedrock embedding response did not include an embedding")
+    return embedding
+
+
+def _signed_opensearch_post(path, payload):
+    base_url = (os.environ.get("OPENSEARCH_URL") or "").rstrip("/")
+    if not base_url:
+        raise ValueError("OPENSEARCH_URL is not configured")
+
+    region = os.environ.get("APP_AWS_REGION") or os.environ.get("BEDROCK_REGION", "us-east-1")
+    url = f"{base_url}{path}"
+    body = json.dumps(payload).encode("utf-8")
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    request = AWSRequest(method="POST", url=url, data=body, headers=headers)
+    credentials = boto3.Session().get_credentials()
+    if credentials is None:
+        raise ValueError("AWS credentials are not available for OpenSearch request signing")
+    SigV4Auth(credentials.get_frozen_credentials(), "es", region).add_auth(request)
+
+    prepared = request.prepare()
+    http_request = urllib.request.Request(
+        url=prepared.url,
+        data=body,
+        headers=dict(prepared.headers),
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(http_request, timeout=8) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        error_body = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"OpenSearch HTTP {exc.code}: {error_body}") from exc
+
+
+def _opensearch_vector_sources(query, mailbox_id=None, top_k=5):
+    index_name = os.environ.get("INDEX_NAME", "mailmanager-index")
+    query_vector = _bedrock_embedding(query)
+
+    filters = []
+    if mailbox_id:
+        filters.append({"term": {"mailboxId": mailbox_id}})
+
+    search_body = {
+        "size": top_k,
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "knn": {
+                            "email_vector": {
+                                "vector": query_vector,
+                                "k": top_k,
+                            }
+                        }
+                    }
+                ],
+                "filter": filters,
+            }
+        },
+    }
+    payload = _signed_opensearch_post(f"/{index_name}/_search", search_body)
+    hits = payload.get("hits", {}).get("hits", [])
+
+    sources = []
+    for hit in hits[:top_k]:
+        source = hit.get("_source", {})
+        body = source.get("body") or source.get("content") or source.get("snippet", "")
+        sources.append(
+            {
+                "threadId": source.get("threadId", ""),
+                "messageId": source.get("messageId", hit.get("_id", "")),
+                "mailboxId": source.get("mailboxId", mailbox_id or ""),
+                "provider": source.get("provider", ""),
+                "subject": source.get("subject", "Untitled email"),
+                "sender": source.get("sender") or source.get("from", ""),
+                "sentAt": source.get("sentAt", ""),
+                "snippet": (source.get("snippet") or body)[:220],
+                "score": hit.get("_score", 0),
+            }
+        )
+
+    return [source for source in sources if source.get("threadId") or source.get("snippet")]
+
+
+def _format_sources_for_prompt(sources):
+    return "\n\n".join(
+        [
+            (
+                f"Source {idx}: subject={source.get('subject')} sender={source.get('sender')} "
+                f"sentAt={source.get('sentAt')}\n{(source.get('snippet') or '')[:180]}"
+            )
+            for idx, source in enumerate(sources[:3], start=1)
+        ]
+    )
+
+
+def _thread_prompt_context(thread):
+    lines = [f"Subject: {thread.get('subject', '')}"]
+    for msg in thread.get("messages", [])[:3]:
+        lines.append(
+            (
+                f"From: {msg.get('from', '')}\n"
+                f"Sent: {msg.get('sentAt', '')}\n"
+                f"Snippet: {(msg.get('body', '') or '')[:220]}"
+            )
+        )
+    return "\n\n---\n\n".join(lines)
+
+
+def _json_from_text(text):
+    match = re.search(r"\{.*\}", text or "", flags=re.DOTALL)
+    if not match:
+        raise ValueError("Bedrock response did not contain a JSON object")
+    return json.loads(match.group(0))
+
+
 def _put_health(table, bucket_name, request_id):
     table.put_item(
         Item={
@@ -674,16 +847,9 @@ def _priority_for(text):
     return "low"
 
 
-def _search(table, event):
-    body = _parse_body(event)
-    query = body.get("query", "").strip()
-    mailbox_id = body.get("mailboxId")
-
-    if not query:
-        return _response(400, {"error": "missing_query"})
-
+def _keyword_sources(query, mailbox_id=None):
     terms = _normalize_terms(query)
-    messages = _all_messages(table, mailbox_id)
+    messages = _all_messages(_get_table(), mailbox_id)
 
     scored = []
     for msg in messages:
@@ -699,7 +865,7 @@ def _search(table, event):
     scored.sort(key=lambda x: x[0], reverse=True)
     top = scored[:5]
 
-    sources = [
+    return [
         {
             "threadId": msg["threadId"],
             "messageId": msg["messageId"],
@@ -714,14 +880,132 @@ def _search(table, event):
         for score, msg in top
     ]
 
+
+def _template_search_answer(sources):
     if not sources:
-        answer = "I could not find enough evidence in the selected mailbox to answer that."
-    else:
-        top_points = [
-            f"{src['subject']}: {src['snippet']}"
-            for src in sources[:3]
-        ]
-        answer = "Based on the matching emails:\n- " + "\n- ".join(top_points)
+        return "I could not find enough evidence in the selected mailbox to answer that."
+
+    top_points = [
+        f"{src['subject']}: {src['snippet']}"
+        for src in sources[:3]
+    ]
+    return "Based on the matching emails:\n- " + "\n- ".join(top_points)
+
+
+def _bedrock_search_answer(query, sources):
+    context = _format_sources_for_prompt(sources)
+    prompt = f"""
+Answer using only these email snippets. Be concise and cite source subjects when useful.
+
+Question:
+{query}
+
+Sources:
+{context}
+"""
+    return _bedrock_invoke_claude(prompt, max_tokens=250)
+
+
+def _template_summary_payload(thread):
+    messages = thread["messages"]
+    sentence_items = _sentences(messages)
+    key_points = [sentence for _, sentence in sentence_items[:4]]
+    action_candidates = [
+        sentence
+        for _, sentence in sentence_items
+        if any(term in sentence.lower() for term in ["please", "need", "confirm", "approve", "send", "review", "prepare"])
+    ]
+    next_step = _extract_task(action_candidates[-1] if action_candidates else messages[-1].get("body", ""))
+    return {
+        "short": f"{thread['subject']} is active with {len(messages)} messages and clear follow-up needed.",
+        "keyPoints": key_points[:4],
+        "nextStep": next_step,
+        "openQuestions": [f"Next step: {next_step}"],
+    }
+
+
+def _bedrock_summary_payload(thread):
+    prompt = f"""
+Summarize this email thread. Return ONLY compact JSON:
+{{
+  "short": "one sentence",
+  "keyPoints": ["point 1", "point 2"],
+  "nextStep": "one next step",
+  "openQuestions": ["open issue"]
+}}
+
+Thread snippets:
+{_thread_prompt_context(thread)}
+"""
+    text = _bedrock_invoke_claude(prompt, max_tokens=250)
+    payload = _json_from_text(text)
+    return {
+        "short": str(payload.get("short", "")).strip() or f"This thread is about {thread['subject']}.",
+        "keyPoints": payload.get("keyPoints") if isinstance(payload.get("keyPoints"), list) else [],
+        "nextStep": str(payload.get("nextStep", "")).strip() or "Confirm the next step from the thread.",
+        "openQuestions": payload.get("openQuestions") if isinstance(payload.get("openQuestions"), list) else [],
+    }
+
+
+def _template_draft_reply(thread, intent):
+    subject = thread["subject"]
+    action_items = json.loads(_action_items(_get_table(), thread["threadId"])["body"]).get("actionItems", [])
+    next_action = action_items[0]["task"] if action_items else intent
+    return (
+        f"Hi,\n\nThanks for the update on {subject}. I have the next step captured: "
+        f"{next_action}. I will follow up with the requested details and flag any blockers as soon as I find them.\n\n"
+        "Please let me know if there is a specific format or stakeholder list you want me to use.\n\n"
+        "Best,\nDevansh"
+    )
+
+
+def _bedrock_draft_reply(thread, intent):
+    prompt = f"""
+Draft a concise professional email reply. Preserve normal email line breaks.
+Intent: {intent}
+
+Thread snippets:
+{_thread_prompt_context(thread)}
+"""
+    return _bedrock_invoke_claude(prompt, max_tokens=250)
+
+
+def _search(table, event):
+    body = _parse_body(event)
+    query = body.get("query", "").strip()
+    mailbox_id = body.get("mailboxId")
+
+    if not query:
+        return _response(400, {"error": "missing_query"})
+
+    retrieval_mode = "keyword-fallback"
+    sources = []
+
+    try:
+        sources = _opensearch_vector_sources(query, mailbox_id)
+        if sources:
+            retrieval_mode = "opensearch-vector"
+        else:
+            logger.info("OpenSearch vector retrieval returned no results; using keyword fallback")
+    except Exception as exc:
+        logger.exception("OpenSearch vector retrieval failed; using keyword fallback: %s", exc)
+
+    if not sources:
+        sources = _keyword_sources(query, mailbox_id)
+
+    model = "template"
+    try:
+        if sources:
+            answer = _bedrock_search_answer(query, sources)
+            if answer:
+                model = "bedrock"
+            else:
+                raise ValueError("Bedrock returned an empty search answer")
+        else:
+            answer = _template_search_answer(sources)
+    except Exception as exc:
+        logger.exception("Bedrock search generation failed; using template fallback: %s", exc)
+        answer = _template_search_answer(sources)
 
     return _response(
         200,
@@ -729,8 +1013,8 @@ def _search(table, event):
             "query": query,
             "answer": answer,
             "sources": sources,
-            "retrievalMode": "keyword-fallback",
-            "model": "template",
+            "retrievalMode": retrieval_mode,
+            "model": model,
         },
     )
 
@@ -741,27 +1025,21 @@ def _summary(table, thread_id):
         return _response(404, thread_resp)
 
     thread = thread_resp["thread"]
-    messages = thread["messages"]
-    sentence_items = _sentences(messages)
-    key_points = [sentence for _, sentence in sentence_items[:4]]
-    action_candidates = [
-        sentence
-        for _, sentence in sentence_items
-        if any(term in sentence.lower() for term in ["please", "need", "confirm", "approve", "send", "review", "prepare"])
-    ]
-    next_step = _extract_task(action_candidates[-1] if action_candidates else messages[-1].get("body", ""))
+    model = "template"
+
+    try:
+        summary = _bedrock_summary_payload(thread)
+        model = "bedrock"
+    except Exception as exc:
+        logger.exception("Bedrock summary generation failed; using template fallback: %s", exc)
+        summary = _template_summary_payload(thread)
 
     return _response(
         200,
         {
             "threadId": thread_id,
-            "summary": {
-                "short": f"{thread['subject']} is active with {len(messages)} messages and clear follow-up needed.",
-                "keyPoints": key_points[:4],
-                "nextStep": next_step,
-                "openQuestions": [f"Next step: {next_step}"],
-            },
-            "model": "template",
+            "summary": summary,
+            "model": model,
         },
     )
 
@@ -775,23 +1053,23 @@ def _draft_reply(table, thread_id, event):
         return _response(404, thread_resp)
 
     thread = thread_resp["thread"]
-    subject = thread["subject"]
-    action_items = json.loads(_action_items(table, thread_id)["body"]).get("actionItems", [])
-    next_action = action_items[0]["task"] if action_items else intent
+    model = "template"
 
-    draft = (
-        f"Hi,\n\nThanks for the update on {subject}. I have the next step captured: "
-        f"{next_action}. I will follow up with the requested details and flag any blockers as soon as I find them.\n\n"
-        "Please let me know if there is a specific format or stakeholder list you want me to use.\n\n"
-        "Best,\nDevansh"
-    )
+    try:
+        draft = _bedrock_draft_reply(thread, intent)
+        if not draft:
+            raise ValueError("Bedrock returned an empty draft reply")
+        model = "bedrock"
+    except Exception as exc:
+        logger.exception("Bedrock draft reply generation failed; using template fallback: %s", exc)
+        draft = _template_draft_reply(thread, intent)
 
     return _response(
         200,
         {
             "threadId": thread_id,
             "draft": draft,
-            "model": "template",
+            "model": model,
         },
     )
 

@@ -53,6 +53,6 @@ data "aws_iam_policy_document" "api_lambda" {
       "es:ESHttpPost",
       "es:ESHttpGet",
     ]
-    resources = ["*"] 
+    resources = ["*"]
   }
 }

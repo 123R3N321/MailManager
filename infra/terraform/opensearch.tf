@@ -1,3 +1,5 @@
+
+
 resource "aws_opensearch_domain" "email_vector_db" {
   domain_name    = "mailmanager-vectors"
   engine_version = "OpenSearch_2.11"
@@ -25,7 +27,6 @@ resource "aws_opensearch_domain" "email_vector_db" {
     tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
 
-  # Embedding the policy here prevents the "List vs Object" API error
   access_policies = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -34,7 +35,7 @@ resource "aws_opensearch_domain" "email_vector_db" {
         Action    = "es:*"
         Principal = "*"
         Effect    = "Allow"
-        Resource  = "arn:aws:es:us-east-1:377100338169:domain/mailmanager-vectors/*"
+        Resource  = "arn:aws:es:${var.aws_region}:${data.aws_caller_identity.current.account_id}:domain/mailmanager-vectors/*"
         Condition = {
           IpAddress = {
             "aws:SourceIp" = ["72.79.57.110/32"]
@@ -42,22 +43,22 @@ resource "aws_opensearch_domain" "email_vector_db" {
         }
       },
       {
-        Sid       = "AllowAPILambdaRead"
-        Action    = "es:*"
+        Sid    = "AllowAPILambdaRead"
+        Action = "es:*"
         Principal = {
-          "AWS": "arn:aws:iam::377100338169:role/mailmanager-demo-9f53-api-lambda"
+          AWS = aws_iam_role.api_lambda.arn
         }
-        Effect    = "Allow"
-        Resource  = "arn:aws:es:us-east-1:377100338169:domain/mailmanager-vectors/*"
+        Effect   = "Allow"
+        Resource = "arn:aws:es:${var.aws_region}:${data.aws_caller_identity.current.account_id}:domain/mailmanager-vectors/*"
       },
       {
-        Sid       = "AllowIngestWorkerWrite"
-        Action    = ["es:ESHttpPut", "es:ESHttpPost"]
+        Sid    = "AllowIngestWorkerWrite"
+        Action = ["es:ESHttpPut", "es:ESHttpPost"]
         Principal = {
-          "AWS": "arn:aws:iam::377100338169:role/mailmanager-demo-9f53-ingest-worker-lambda"
+          AWS = aws_iam_role.ingest_worker_lambda.arn
         }
-        Effect    = "Allow"
-        Resource  = "arn:aws:es:us-east-1:377100338169:domain/mailmanager-vectors/*"
+        Effect   = "Allow"
+        Resource = "arn:aws:es:${var.aws_region}:${data.aws_caller_identity.current.account_id}:domain/mailmanager-vectors/*"
       }
     ]
   })

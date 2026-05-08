@@ -19,3 +19,13 @@ terraform.rc
 .DS_Store
 frontend/.env
 frontend/dist/
+
+# Terraform local state and generated files
+*.tfstate
+*.tfstate.*
+infra/terraform/output.json
+infra/terraform/request.json
+infra/terraform/response.json
+infra/terraform/policy.json
+infra/terraform/*.txt
+infra/terraform/*.pdf

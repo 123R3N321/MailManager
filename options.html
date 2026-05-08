@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Email Reply — Settings</title>
+  <style>
+    body {
+      max-width: 520px;
+      margin: 32px auto;
+      padding: 0 16px;
+      font-family: "Google Sans", Roboto, sans-serif;
+      font-size: 14px;
+      color: #202124;
+    }
+    h2 { font-size: 20px; margin-bottom: 24px; }
+    section { margin-bottom: 28px; border-bottom: 1px solid #e0e0e0; padding-bottom: 24px; }
+    label { display: block; margin-bottom: 4px; font-weight: 500; }
+    select, input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+    }
+    .field-group { margin-bottom: 14px; }
+    button[type="submit"] {
+      padding: 10px 24px;
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover { background: #1558b0; }
+    #save-msg { margin-left: 12px; color: #137333; font-size: 13px; }
+    .hint { font-size: 12px; color: #666; margin-top: -10px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h2>AI Email Reply — Settings</h2>
+
+  <form id="settings-form">
+    <section>
+      <div class="field-group">
+        <label for="provider-select">LLM Provider</label>
+        <select id="provider-select">
+          <option value="dummy">Dummy (Test Mode — no API key needed)</option>
+          <option value="aws-backend">AWS Backend (RAG via Bedrock)</option>
+          <option value="claude">Claude (Anthropic)</option>
+          <option value="openai">OpenAI</option>
+        </select>
+      </div>
+    </section>
+
+    <section id="aws-backend-section">
+      <h3 style="margin-top:0">AWS Backend Settings</h3>
+      <div class="field-group">
+        <label for="aws-api-url">API Gateway URL</label>
+        <input type="text" id="aws-api-url" placeholder="https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com" />
+        <p class="hint">Run <code>terraform apply</code> in infrastructure/ — the URL is printed as <code>api_url</code>.</p>
+      </div>
+    </section>
+
+    <section id="claude-section">
+      <h3 style="margin-top:0">Claude Settings</h3>
+      <div class="field-group">
+        <label for="claude-key">Anthropic API Key</label>
+        <input type="password" id="claude-key" placeholder="sk-ant-..." autocomplete="off" />
+      </div>
+      <div class="field-group">
+        <label for="claude-model">Model</label>
+        <select id="claude-model">
+          <option value="claude-haiku-4-5-20251001">Claude Haiku (fast, cheap)</option>
+          <option value="claude-sonnet-4-6">Claude Sonnet (balanced)</option>
+          <option value="claude-opus-4-7">Claude Opus (most capable)</option>
+        </select>
+      </div>
+    </section>
+
+    <section id="openai-section">
+      <h3 style="margin-top:0">OpenAI Settings</h3>
+      <div class="field-group">
+        <label for="openai-key">OpenAI API Key</label>
+        <input type="password" id="openai-key" placeholder="sk-..." autocomplete="off" />
+      </div>
+      <div class="field-group">
+        <label for="openai-model">Model</label>
+        <select id="openai-model">
+          <option value="gpt-4o-mini">GPT-4o mini (fast, cheap)</option>
+          <option value="gpt-4o">GPT-4o (balanced)</option>
+          <option value="gpt-3.5-turbo">GPT-3.5 Turbo (legacy)</option>
+        </select>
+      </div>
+    </section>
+
+    <section>
+      <h3 style="margin-top:0">Reply Preferences</h3>
+      <div class="field-group">
+        <label for="tone-select">Default Tone</label>
+        <select id="tone-select">
+          <option value="professional">Professional</option>
+          <option value="casual">Casual</option>
+          <option value="brief">Brief</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="language-input">Reply Language</label>
+        <input type="text" id="language-input" placeholder="en" maxlength="10" />
+        <p class="hint">BCP-47 code, e.g. en, fr, es, zh</p>
+      </div>
+    </section>
+
+    <button type="submit">Save Settings</button>
+    <span id="save-msg"></span>
+  </form>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

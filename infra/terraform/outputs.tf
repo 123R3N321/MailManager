@@ -4,7 +4,7 @@ output "aws_region" {
 }
 
 output "api_invoke_url" {
-  description = "Base URL for the HTTP API (append health or enqueue paths)."
+  description = "Base URL for the HTTP API."
   value       = "${aws_apigatewayv2_api.http.api_endpoint}/"
 }
 
@@ -58,4 +58,24 @@ output "lambda_schedule_stub_function_name" {
 
 output "lambda_ingest_worker_function_name" {
   value = aws_lambda_function.ingest_worker.function_name
+}
+
+output "website_url" {
+  description = "URL of the frontend website."
+  value       = "http://${aws_s3_bucket_website_configuration.website.website_endpoint}"
+}
+
+output "frontend_bucket_name" {
+  description = "The name of the S3 bucket for the frontend."
+  value       = aws_s3_bucket.website.id
+}
+
+output "raw_mail_bucket_name" {
+  description = "The name of the S3 bucket for raw mail ingestion."
+  value       = aws_s3_bucket.raw_mail.bucket
+}
+
+output "opensearch_endpoint" {
+  description = "OpenSearch endpoint for the email vector database."
+  value       = aws_opensearch_domain.email_vector_db.endpoint
 }

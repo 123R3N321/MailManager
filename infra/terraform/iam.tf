@@ -1,6 +1,7 @@
 data "aws_iam_policy_document" "lambda_assume" {
   statement {
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
       identifiers = ["lambda.amazonaws.com"]
@@ -13,7 +14,7 @@ resource "aws_iam_role" "api_lambda" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
-data "aws_iam_policy_document" "api_lambda" {
+data "aws_iam_policy_document" "api_lambda_permissions" {
   statement {
     sid = "Logs"
     actions = [
@@ -26,10 +27,16 @@ data "aws_iam_policy_document" "api_lambda" {
   statement {
     sid = "DynamoDB"
     actions = [
-      "dynamodb:PutItem",
       "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:Query",
+      "dynamodb:Scan",
     ]
-    resources = [aws_dynamodb_table.metadata.arn]
+    resources = [
+      aws_dynamodb_table.metadata.arn,
+      "${aws_dynamodb_table.metadata.arn}/index/*",
+    ]
   }
 
   statement {
@@ -64,12 +71,43 @@ data "aws_iam_policy_document" "api_lambda" {
     ]
     resources = [aws_sqs_queue.ingest.arn]
   }
+
+  statement {
+    sid = "BedrockAccess"
+    actions = [
+      "bedrock:InvokeModel",
+    ]
+    resources = [
+      "arn:aws:bedrock:${var.aws_region}::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
+      "arn:aws:bedrock:${var.aws_region}::foundation-model/amazon.titan-embed-text-v1",
+    ]
+  }
+
+  statement {
+    sid = "MarketplaceBedrockModelEnablement"
+    actions = [
+      "aws-marketplace:ViewSubscriptions",
+      "aws-marketplace:Subscribe",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "OpenSearchRead"
+    actions = [
+      "es:ESHttpGet",
+      "es:ESHttpPost",
+    ]
+    resources = [
+      "${aws_opensearch_domain.email_vector_db.arn}/*",
+    ]
+  }
 }
 
 resource "aws_iam_role_policy" "api_lambda" {
   name   = "inline"
   role   = aws_iam_role.api_lambda.id
-  policy = data.aws_iam_policy_document.api_lambda.json
+  policy = data.aws_iam_policy_document.api_lambda_permissions.json
 }
 
 resource "aws_iam_role" "ingest_worker_lambda" {
@@ -96,6 +134,49 @@ data "aws_iam_policy_document" "ingest_worker_lambda" {
       "sqs:ChangeMessageVisibility",
     ]
     resources = [aws_sqs_queue.ingest.arn]
+  }
+
+  statement {
+    sid = "DynamoWrite"
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+    ]
+    resources = [
+      aws_dynamodb_table.metadata.arn,
+    ]
+  }
+
+  statement {
+    sid = "BedrockEmbedding"
+    actions = [
+      "bedrock:InvokeModel",
+    ]
+    resources = [
+      "arn:aws:bedrock:${var.aws_region}::foundation-model/amazon.titan-embed-text-v1",
+    ]
+  }
+
+  statement {
+    sid = "OpenSearchWrite"
+    actions = [
+      "es:ESHttpGet",
+      "es:ESHttpPost",
+      "es:ESHttpPut",
+    ]
+    resources = [
+      "${aws_opensearch_domain.email_vector_db.arn}/*",
+    ]
+  }
+
+  statement {
+    sid = "S3Read"
+    actions = [
+      "s3:GetObject",
+    ]
+    resources = [
+      "${aws_s3_bucket.raw_mail.arn}/*",
+    ]
   }
 }
 

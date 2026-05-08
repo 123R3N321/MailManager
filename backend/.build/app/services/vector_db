@@ -1,0 +1,104 @@
+import os
+import json
+import logging
+from app.core.aws_config import get_opensearch_client, get_bedrock_client
+
+# Set up logging so we can see errors in CloudWatch
+logger = logging.getLogger(__name__)
+
+class VectorDBService:
+    def __init__(self):
+        try:
+            # These must match the environment variables in your lambda.tf
+            self.index_name = os.getenv("INDEX_NAME", "mailmanager-index")
+            self.embedding_model = os.getenv("EMBEDDING_MODEL_ID", "amazon.titan-embed-text-v1")
+            
+            # Initialize clients
+            self.os_client = get_opensearch_client()
+            self.bedrock = get_bedrock_client()
+            
+            logger.info(f"VectorDBService initialized with index: {self.index_name}")
+        except Exception as e:
+            logger.error(f"Failed to initialize VectorDBService: {str(e)}")
+            # Don't raise here, or the /health check will 500 instantly
+            self.os_client = None
+            self.bedrock = None
+
+    def _get_embedding(self, text):
+        """Converts text to vector using Amazon Titan."""
+        if not self.bedrock:
+            raise RuntimeError("Bedrock client not initialized")
+            
+        body = json.dumps({"inputText": text})
+        try:
+            response = self.bedrock.invoke_model(
+                body=body,
+                modelId=self.embedding_model
+            )
+            response_body = json.loads(response['body'].read())
+            return response_body['embedding']
+        except Exception as e:
+            logger.error(f"Embedding generation failed: {str(e)}")
+            raise e
+
+    def query_relevant_emails(self, user_query, mailbox_id, top_k=5):
+        """Perform k-NN search filtered by mailbox_id."""
+        if not self.os_client:
+            logger.error("OpenSearch client not initialized")
+            return []
+
+        try:
+            query_vector = self._get_embedding(user_query)
+            
+            search_body = {
+                "size": top_k,
+                "query": {
+                    "bool": {
+                        "must": [
+                            {
+                                "knn": {
+                                    "email_vector": {
+                                        "vector": query_vector, 
+                                        "k": top_k
+                                    }
+                                }
+                            }
+                        ],
+                        "filter": [
+                            {"term": {"mailbox_id": mailbox_id}}
+                        ]
+                    }
+                }
+            }
+
+            response = self.os_client.search(
+                index=self.index_name, 
+                body=search_body
+            )
+            return [hit['_source']['content'] for hit in response['hits']['hits']]
+        except Exception as e:
+            logger.error(f"Search failed for index {self.index_name}: {str(e)}")
+            return []
+
+    def index_email(self, email_data):
+        """Index email with vector into OpenSearch."""
+        if not self.os_client:
+            raise RuntimeError("OpenSearch client not initialized")
+
+        text_to_embed = f"Subject: {email_data['subject']}\nContent: {email_data['content']}"
+        vector = self._get_embedding(text_to_embed)
+
+        document = {
+            "mailbox_id": email_data['mailbox_id'],
+            "subject": email_data['subject'],
+            "content": email_data['content'],
+            "email_vector": vector,
+            "timestamp": email_data.get('timestamp')
+        }
+
+        return self.os_client.index(
+            index=self.index_name,
+            body=document,
+            refresh=True
+        )
+    

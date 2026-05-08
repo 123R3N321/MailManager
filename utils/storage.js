@@ -30,10 +30,11 @@ export async function saveSettings(partial) {
 }
 
 export function buildProviderConfig(settings, providerId) {
+  const prefix = providerId.replace(/-/g, "_");
   return {
-    apiKey:   settings[`${providerId}_apiKey`]   || "",
-    model:    settings[`${providerId}_model`]    || "",
-    apiUrl:   settings[`${providerId}_apiUrl`]   || "",
+    apiKey:      settings[`${prefix}_apiKey`]   || "",
+    model:       settings[`${prefix}_model`]    || "",
+    apiUrl:      settings[`${prefix}_apiUrl`]   || "",
     maxTokens:   settings.maxTokens,
     temperature: settings.temperature,
   };
